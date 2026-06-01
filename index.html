@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AquaFill — Water Refill Delivery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#0b3a47; --ink-soft:#3d6470; --paper:#f3f8f8; --card:#fff;
+    --aqua:#13a3b5; --aqua-deep:#0b7d8c; --aqua-mist:#dff1f2; --line:#d6e7e8;
+    --ok:#1f9d6a; --warn:#d98a14; --err:#cf4444;
+    --shadow:0 18px 50px -22px rgba(11,58,71,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Hanken Grotesk",system-ui,sans-serif;color:var(--ink);
+    background:
+      radial-gradient(120% 80% at 100% 0%, #e3f4f5 0%, transparent 55%),
+      radial-gradient(90% 70% at 0% 100%, #e8f5ee 0%, transparent 50%),
+      var(--paper);
+    min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.5;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:28px 20px 64px}
+  .brand{display:flex;align-items:center;gap:11px;margin-bottom:8px}
+  .drop{width:34px;height:34px;flex:0 0 auto}
+  .brand h1{font-family:"Fraunces",serif;font-weight:600;font-size:25px;letter-spacing:-.02em;margin:0}
+  .brand span{color:var(--aqua-deep)}
+  .tagline{color:var(--ink-soft);font-size:14.5px;margin:0 0 26px 45px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px 22px;box-shadow:var(--shadow)}
+  .step-title{font-family:"Fraunces",serif;font-weight:600;font-size:22px;margin:0 0 4px;letter-spacing:-.02em}
+  .step-sub{color:var(--ink-soft);font-size:14px;margin:0 0 22px}
+
+  label{display:block;font-weight:600;font-size:13.5px;margin:0 0 7px;letter-spacing:.01em}
+  .field{margin-bottom:18px}
+  input,textarea{width:100%;font:inherit;color:var(--ink);border:1.5px solid var(--line);
+    border-radius:13px;padding:13px 14px;background:#fbfdfd;transition:.15s border,.15s box-shadow}
+  input:focus,textarea:focus{outline:none;border-color:var(--aqua);box-shadow:0 0 0 4px var(--aqua-mist)}
+  textarea{resize:vertical;min-height:64px}
+  .opt{font-weight:400;color:var(--ink-soft);font-size:12px}
+
+  .qty{display:flex;align-items:center;width:100%;border:1.5px solid var(--line);border-radius:13px;overflow:hidden;background:#fbfdfd}
+  .qty button{width:52px;height:50px;border:none;background:var(--aqua-mist);color:var(--aqua-deep);
+    font-size:22px;font-weight:600;cursor:pointer;transition:.12s background}
+  .qty button:active{background:#c8e8ea}
+  .qty input{border:none;border-radius:0;text-align:center;background:transparent;font-weight:600;font-size:17px}
+  .qty input:focus{box-shadow:none}
+
+  .summary{background:linear-gradient(180deg,var(--aqua-mist),#eef8f8);border:1px solid var(--line);
+    border-radius:15px;padding:16px 18px;margin:4px 0 22px}
+  .summary .row{display:flex;justify-content:space-between;font-size:14px;color:var(--ink-soft);margin-bottom:6px}
+  .summary .total{display:flex;justify-content:space-between;align-items:baseline;padding-top:10px;margin-top:6px;border-top:1px dashed var(--line)}
+  .summary .total b{font-family:"Fraunces",serif;font-size:26px;color:var(--ink);font-weight:600}
+  .summary .total .lbl{font-weight:600;color:var(--ink)}
+
+  .btn{width:100%;border:none;cursor:pointer;font:inherit;font-weight:700;font-size:16px;letter-spacing:.01em;
+    color:#fff;background:linear-gradient(180deg,var(--aqua),var(--aqua-deep));padding:15px;border-radius:14px;
+    box-shadow:0 12px 24px -10px rgba(19,163,181,.7);transition:.15s transform,.15s box-shadow}
+  .btn:hover{transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+  .btn[disabled]{opacity:.6;cursor:not-allowed;transform:none}
+  .btn-ghost{background:none;color:var(--aqua-deep);box-shadow:none;font-weight:600;font-size:14px;padding:10px}
+  .btn-ghost:hover{transform:none}
+
+  .note{font-size:12.5px;color:var(--ink-soft);text-align:center;margin-top:14px;line-height:1.45}
+
+  /* payment screen */
+  .pay-amt{text-align:center;margin:0 0 4px}
+  .pay-amt .big{font-family:"Fraunces",serif;font-size:40px;font-weight:600;display:block;line-height:1.1}
+  .pay-amt small{color:var(--ink-soft);font-size:13px}
+  .gcash-box{background:#0a6cff;background:linear-gradient(135deg,#1a7bff,#0a52d6);border-radius:16px;
+    padding:18px;color:#fff;margin:18px 0;text-align:center}
+  .gcash-box .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+  .gcash-box .num{font-size:22px;font-weight:700;letter-spacing:.02em;margin:3px 0}
+  .gcash-box .name{font-size:13px;opacity:.9}
+  .copy{margin-top:8px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);color:#fff;
+    font:inherit;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer}
+  .qr{display:block;width:190px;height:190px;object-fit:contain;margin:0 auto 6px;border-radius:14px;
+    border:1px solid var(--line);background:#fff;padding:8px}
+  .qr-cap{text-align:center;font-size:12.5px;color:var(--ink-soft);margin:0 0 20px}
+
+  .dropzone{border:2px dashed var(--line);border-radius:15px;padding:22px;text-align:center;cursor:pointer;
+    transition:.15s border,.15s background;background:#fbfdfd}
+  .dropzone:hover{border-color:var(--aqua);background:var(--aqua-mist)}
+  .dropzone svg{width:30px;height:30px;color:var(--aqua-deep);margin-bottom:6px}
+  .dropzone p{margin:0;font-size:13.5px;color:var(--ink-soft)}
+  .dropzone b{color:var(--aqua-deep)}
+  #fileInput{display:none}
+  .preview{margin-top:12px;text-align:center}
+  .preview img{max-width:100%;max-height:240px;border-radius:13px;border:1px solid var(--line)}
+  .preview .change{margin-top:8px}
+
+  .center{text-align:center}
+  .spinner{width:54px;height:54px;margin:6px auto 18px;border-radius:50%;
+    border:4px solid var(--aqua-mist);border-top-color:var(--aqua);animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .pulse-ring{width:84px;height:84px;margin:0 auto 18px}
+  .check,.cross,.clock{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;color:#fff;
+    font-size:40px;animation:pop .4s cubic-bezier(.2,1.4,.4,1) both}
+  .check{background:var(--ok)}
+  .cross{background:var(--err)}
+  .clock{background:var(--warn)}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .status-amt{font-family:"Fraunces",serif;font-size:28px;margin:10px 0 2px;font-weight:600}
+  .meta{font-size:13.5px;color:var(--ink-soft)}
+  .meta b{color:var(--ink)}
+  .link-btn{display:inline-block;margin-top:18px;color:var(--aqua-deep);font-weight:600;text-decoration:none;
+    border-bottom:1.5px solid var(--aqua-mist);padding-bottom:1px;cursor:pointer}
+  .err-box{background:#fdeced;border:1px solid #f3c4c6;color:#9b2c2c;border-radius:12px;padding:12px 14px;
+    font-size:13.5px;margin-top:14px;display:none}
+  .order-tag{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--aqua-deep);font-weight:700;margin-bottom:10px}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <svg class="drop" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2.5C12 2.5 5 10 5 15a7 7 0 0 0 14 0c0-5-7-12.5-7-12.5Z" fill="#13a3b5"/>
+      <path d="M9 15a3 3 0 0 0 3 3" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>
+    <h1>Aqua<span>Fill</span></h1>
+  </div>
+  <p class="tagline">Clean refill water, delivered to your door.</p>
+
+  <!-- ===== STEP 1: ORDER DETAILS ===== -->
+  <div id="orderScreen" class="card">
+    <h2 class="step-title">Place your order</h2>
+    <p class="step-sub">Tell us where and when, then pay with GCash.</p>
+
+    <div class="field">
+      <label for="name">Your name</label>
+      <input type="text" id="name" placeholder="Juan dela Cruz" />
+    </div>
+    <div class="field">
+      <label for="mobile">Mobile number</label>
+      <input type="tel" id="mobile" placeholder="0917 000 0000" inputmode="tel" />
+    </div>
+    <div class="field">
+      <label for="address">Delivery address</label>
+      <textarea id="address" placeholder="House no., street, barangay, landmark…"></textarea>
+    </div>
+    <div class="field">
+      <label for="date">Delivery date</label>
+      <input type="date" id="date" />
+    </div>
+    <div class="field">
+      <label for="qty">Quantity (containers)</label>
+      <div class="qty">
+        <button type="button" id="minus" aria-label="Decrease">–</button>
+        <input type="number" id="qty" value="1" min="1" max="50" inputmode="numeric" />
+        <button type="button" id="plus" aria-label="Increase">+</button>
+      </div>
+    </div>
+
+    <div class="summary">
+      <div class="row"><span id="priceLine">₱25 × 1 container</span><span></span></div>
+      <div class="total"><span class="lbl">Total</span><b id="total">₱25</b></div>
+    </div>
+
+    <button class="btn" id="toPayBtn">Continue to GCash payment</button>
+    <div class="err-box" id="orderErr"></div>
+  </div>
+
+  <!-- ===== STEP 2: PAY + UPLOAD SCREENSHOT ===== -->
+  <div id="payScreen" class="card hidden">
+    <h2 class="step-title">Pay with GCash</h2>
+    <p class="step-sub">Send the exact amount, then upload your screenshot.</p>
+
+    <div class="pay-amt"><span class="big" id="payAmount">₱25</span><small>Send this exact amount</small></div>
+
+    <div class="gcash-box">
+      <div class="lbl">GCash — Send to</div>
+      <div class="num" id="gcNumber">0917 000 0000</div>
+      <div class="name" id="gcName">Account Name</div>
+      <button class="copy" id="copyBtn">Copy number</button>
+    </div>
+
+    <img id="qrImg" class="qr" alt="GCash QR code" />
+    <p class="qr-cap">…or scan this QR with your GCash app</p>
+
+    <div class="field">
+      <label>Upload payment screenshot</label>
+      <div class="dropzone" id="dropzone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <p><b>Tap to add</b> your GCash receipt<br/><span class="opt">JPG or PNG, taken right after you paid</span></p>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" />
+      <div class="preview hidden" id="preview">
+        <img id="previewImg" alt="Preview" />
+        <div><button class="btn btn-ghost change" id="changeImg">Choose a different photo</button></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="ref">GCash reference number <span class="opt">(optional, helps us verify faster)</span></label>
+      <input type="text" id="ref" placeholder="e.g. 1234 567 890123" inputmode="numeric" />
+    </div>
+
+    <button class="btn" id="submitBtn">I've paid — submit proof</button>
+    <button class="btn btn-ghost" id="backBtn">← Back to order details</button>
+    <div class="err-box" id="payErr"></div>
+  </div>
+
+  <!-- ===== STEP 3: RECEIVED / VERIFYING ===== -->
+  <div id="waitScreen" class="card center hidden">
+    <div class="order-tag" id="waitOrderId">ORDER</div>
+    <div class="pulse-ring"><div class="clock">⏳</div></div>
+    <h2 class="step-title">Order received!</h2>
+    <p class="step-sub">We're checking your payment. This page updates the moment it's confirmed.</p>
+    <div class="spinner"></div>
+    <p class="meta">Verifying your GCash payment <span id="dots">.</span></p>
+    <p class="note">You can safely close this page — we'll prepare your delivery once your payment is confirmed.<br/>Bookmark this link to check your status anytime.</p>
+    <div class="err-box" id="waitErr"></div>
+  </div>
+
+  <!-- ===== STEP 3a: CONFIRMED ===== -->
+  <div id="successScreen" class="card center hidden">
+    <div class="order-tag" id="okOrderId">ORDER</div>
+    <div class="pulse-ring"><div class="check">✓</div></div>
+    <h2 class="step-title">Payment confirmed!</h2>
+    <p class="step-sub">Your refill order is confirmed and being prepared.</p>
+    <div class="status-amt" id="okAmount">₱0</div>
+    <p class="meta"><b id="okQty">0</b> container(s) · delivery <b id="okDate">—</b></p>
+    <span class="link-btn" onclick="location.href=location.pathname">Place another order</span>
+  </div>
+
+  <!-- ===== STEP 3b: REJECTED ===== -->
+  <div id="rejectScreen" class="card center hidden">
+    <div class="order-tag" id="rejOrderId">ORDER</div>
+    <div class="pulse-ring"><div class="cross">✕</div></div>
+    <h2 class="step-title">We couldn't verify this payment</h2>
+    <p class="step-sub">The payment proof didn't match. Please contact us, or place the order again with a clear screenshot.</p>
+    <span class="link-btn" onclick="location.href=location.pathname">Try again</span>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================
+   CONFIG — edit these after deploying Apps Script
+   =========================================================== */
+const APPS_SCRIPT_URL    = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+const PRICE_PER_CONTAINER = 25;                 // ₱ per container (match Code.gs)
+const GCASH_NAME         = "Juan D.";           // shown to customer
+const GCASH_NUMBER       = "0917 123 4567";     // your GCash number
+const GCASH_QR_IMAGE     = "gcash-qr.png";      // put this image file in your repo
+/* =========================================================== */
+
+const peso = n => "₱" + Number(n).toLocaleString("en-PH");
+const $ = id => document.getElementById(id);
+const screens = ["orderScreen","payScreen","waitScreen","successScreen","rejectScreen"];
+function show(s){ screens.forEach(x=>$(x).classList.add("hidden")); $(s).classList.remove("hidden"); window.scrollTo(0,0); }
+function showErr(box,msg){ box.textContent=msg; box.style.display="block"; }
+
+/* ---- order form ---- */
+const qtyEl=$("qty"), dateEl=$("date");
+dateEl.value=new Date().toISOString().slice(0,10);
+dateEl.min=new Date().toISOString().slice(0,10);
+function refreshSummary(){
+  let q=Math.max(1,Math.min(50,parseInt(qtyEl.value||"1",10))); qtyEl.value=q;
+  $("priceLine").textContent=`${peso(PRICE_PER_CONTAINER)} × ${q} container${q>1?"s":""}`;
+  $("total").textContent=peso(PRICE_PER_CONTAINER*q);
+}
+$("minus").onclick=()=>{qtyEl.value=Math.max(1,(+qtyEl.value||1)-1);refreshSummary();};
+$("plus").onclick =()=>{qtyEl.value=Math.min(50,(+qtyEl.value||1)+1);refreshSummary();};
+qtyEl.oninput=refreshSummary; refreshSummary();
+
+/* ---- step 1 -> step 2 ---- */
+$("toPayBtn").onclick=()=>{
+  const err=$("orderErr"); err.style.display="none";
+  if(!$("name").value.trim())   return showErr(err,"Please enter your name.");
+  if(!$("mobile").value.trim()) return showErr(err,"Please enter your mobile number.");
+  if(!$("address").value.trim())return showErr(err,"Please enter your delivery address.");
+  if(!dateEl.value)             return showErr(err,"Please choose a delivery date.");
+  const total=PRICE_PER_CONTAINER*parseInt(qtyEl.value,10);
+  $("payAmount").textContent=peso(total);
+  $("gcNumber").textContent=GCASH_NUMBER;
+  $("gcName").textContent=GCASH_NAME;
+  $("qrImg").src=GCASH_QR_IMAGE;
+  show("payScreen");
+};
+$("backBtn").onclick=()=>show("orderScreen");
+
+/* ---- copy number ---- */
+$("copyBtn").onclick=()=>{
+  navigator.clipboard?.writeText(GCASH_NUMBER.replace(/\s/g,""));
+  $("copyBtn").textContent="Copied ✓";
+  setTimeout(()=>$("copyBtn").textContent="Copy number",1500);
+};
+
+/* ---- screenshot upload + compression ---- */
+let imageData=null;
+$("dropzone").onclick=()=>$("fileInput").click();
+$("changeImg").onclick=()=>$("fileInput").click();
+$("fileInput").onchange=async e=>{
+  const file=e.target.files[0]; if(!file) return;
+  try{
+    const dataUrl=await compressImage(file,1280,0.7);
+    imageData=dataUrl.split(",")[1];
+    $("previewImg").src=dataUrl;
+    $("dropzone").classList.add("hidden");
+    $("preview").classList.remove("hidden");
+  }catch(_){ showErr($("payErr"),"Couldn't read that image. Try another photo."); }
+};
+function compressImage(file,maxDim,quality){
+  return new Promise((resolve,reject)=>{
+    const img=new Image(), reader=new FileReader();
+    reader.onload=ev=>img.src=ev.target.result;
+    reader.onerror=reject;
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(w>h && w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
+      else if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
+      const c=document.createElement("canvas"); c.width=w; c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      resolve(c.toDataURL("image/jpeg",quality));
+    };
+    img.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---- POST helper (text/plain avoids CORS preflight) ---- */
+async function callBackend(payload){
+  const res=await fetch(APPS_SCRIPT_URL,{
+    method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(payload),redirect:"follow"
+  });
+  return res.json();
+}
+
+/* ---- submit proof ---- */
+$("submitBtn").onclick=async()=>{
+  const err=$("payErr"); err.style.display="none";
+  if(!imageData) return showErr(err,"Please upload your payment screenshot first.");
+  const btn=$("submitBtn"); btn.disabled=true; btn.textContent="Submitting…";
+  try{
+    const data=await callBackend({
+      action:"createOrder",
+      name:$("name").value.trim(),
+      mobile:$("mobile").value.trim(),
+      address:$("address").value.trim(),
+      date:dateEl.value,
+      quantity:parseInt(qtyEl.value,10),
+      gcashRef:$("ref").value.trim(),
+      image:{data:imageData,mime:"image/jpeg"}
+    });
+    if(data.error) throw new Error(data.error);
+    sessionStorage.setItem("aquafill_order",data.orderId);
+    $("waitOrderId").textContent=data.orderId;
+    show("waitScreen"); animateDots(); pollStatus(data.orderId);
+  }catch(e){
+    showErr(err,"Couldn't submit: "+e.message);
+    btn.disabled=false; btn.textContent="I've paid — submit proof";
+  }
+};
+
+/* ---- returning to check status ---- */
+const params=new URLSearchParams(location.search);
+const existing=params.get("order")||sessionStorage.getItem("aquafill_order");
+if(!$("waitScreen").classList.contains("hidden")){ /* already shown after submit */ }
+else if(existing){ $("waitOrderId").textContent=existing; show("waitScreen"); animateDots(); pollStatus(existing); }
+else show("orderScreen");
+
+function animateDots(){ const d=$("dots");let n=1;setInterval(()=>{n=(n%3)+1;d.textContent=".".repeat(n);},450); }
+
+let attempts=0;
+async function pollStatus(id){
+  attempts++;
+  try{
+    const d=await callBackend({action:"status",orderId:id});
+    if(d.status==="PAID"){
+      sessionStorage.removeItem("aquafill_order");
+      $("okOrderId").textContent=id; $("okAmount").textContent=peso(d.amount);
+      $("okQty").textContent=d.quantity; $("okDate").textContent=d.date;
+      return show("successScreen");
+    }
+    if(d.status==="REJECTED"){ $("rejOrderId").textContent=id; return show("rejectScreen"); }
+  }catch(_){}
+  if(attempts>180){ // ~15 min
+    showErr($("waitErr"),"Still verifying. You can close this page — your order is saved. Reopen this link later to see the confirmed status.");
+    return;
+  }
+  setTimeout(()=>pollStatus(id),5000);
+}
+</script>
+</body>
+</html>
