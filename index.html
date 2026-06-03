@@ -212,7 +212,7 @@
     <div class="order-tag" id="waitOrderId">ORDER</div>
     <div class="pulse-ring"><div class="clock">⏳</div></div>
     <h2 class="step-title">Order received!</h2>
-    <p class="step-sub">We're checking your payment. This page updates the moment it's confirmed.</p>
+    <p class="step-sub">We're verifying your payment automatically — this usually takes just a few seconds.</p>
     <div class="spinner"></div>
     <p class="meta">Verifying your GCash payment <span id="dots">.</span></p>
     <p class="note">You can safely close this page — we'll prepare your delivery once your payment is confirmed.<br/>Bookmark this link to check your status anytime.</p>
@@ -245,10 +245,10 @@
 /* ===========================================================
    CONFIG — edit these after deploying Apps Script
    =========================================================== */
-const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbxL2CJ3dpIJAEwlundzC3l3aPJLwFZ4JZz7IA0_RsoePRpi8Y1oJqjJHwMhah8k2mIsjQ/exec";
+const APPS_SCRIPT_URL    = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 const PRICE_PER_CONTAINER = 25;                 // ₱ per container (match Code.gs)
-const GCASH_NAME         = "RE*******R HA***Y CL****N I** M.";           // shown to customer
-const GCASH_NUMBER       = "0926 530 5143";     // your GCash number
+const GCASH_NAME         = "Juan D.";           // shown to customer
+const GCASH_NUMBER       = "0917 123 4567";     // your GCash number
 const GCASH_QR_IMAGE     = "gcash-qr.png";      // put this image file in your repo
 /* =========================================================== */
 
@@ -339,19 +339,33 @@ async function callBackend(payload){
 $("submitBtn").onclick=async()=>{
   const err=$("payErr"); err.style.display="none";
   if(!imageData) return showErr(err,"Please upload your payment screenshot first.");
-  const btn=$("submitBtn"); btn.disabled=true; btn.textContent="Submitting…";
+  const quantity=parseInt(qtyEl.value,10);
+  const date=dateEl.value;
+  const total=PRICE_PER_CONTAINER*quantity;
+  const btn=$("submitBtn"); btn.disabled=true; btn.textContent="Verifying…";
   try{
     const data=await callBackend({
       action:"createOrder",
       name:$("name").value.trim(),
       mobile:$("mobile").value.trim(),
       address:$("address").value.trim(),
-      date:dateEl.value,
-      quantity:parseInt(qtyEl.value,10),
+      date:date,
+      quantity:quantity,
       gcashRef:$("ref").value.trim(),
       image:{data:imageData,mime:"image/jpeg"}
     });
     if(data.error) throw new Error(data.error);
+    // The backend auto-verifies via OCR and returns the decision immediately.
+    if(data.status==="PAID"){
+      sessionStorage.removeItem("aquafill_order");
+      $("okOrderId").textContent=data.orderId; $("okAmount").textContent=peso(total);
+      $("okQty").textContent=quantity; $("okDate").textContent=date;
+      return show("successScreen");
+    }
+    if(data.status==="REJECTED"){
+      $("rejOrderId").textContent=data.orderId; return show("rejectScreen");
+    }
+    // AWAITING REVIEW (OCR unclear / needs a human) — keep checking.
     sessionStorage.setItem("aquafill_order",data.orderId);
     $("waitOrderId").textContent=data.orderId;
     show("waitScreen"); animateDots(); pollStatus(data.orderId);
